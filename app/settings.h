@@ -34,15 +34,19 @@ public:
 
     static Settings *instance();
 
-    bool stayOnTop();
-    bool useLightCheckerboard();
+    bool stayOnTop() const;
+    bool useBuiltInCloseAnimation() const;
+    bool useLightCheckerboard() const;
+    bool loopGallery() const;
     DoubleClickBehavior doubleClickBehavior() const;
     MouseWheelBehavior mouseWheelBehavior() const;
     WindowSizeBehavior initWindowSizeBehavior() const;
     Qt::HighDpiScaleFactorRoundingPolicy hiDpiScaleFactorBehavior() const;
 
     void setStayOnTop(bool on);
+    void setUseBuiltInCloseAnimation(bool on);
     void setUseLightCheckerboard(bool light);
+    void setLoopGallery(bool on);
     void setDoubleClickBehavior(DoubleClickBehavior dcb);
     void setMouseWheelBehavior(MouseWheelBehavior mwb);
     void setInitWindowSizeBehavior(WindowSizeBehavior wsb);
