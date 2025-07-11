@@ -44,6 +44,8 @@
 #include <QDBusConnectionInterface>
 #endif // HAVE_QTDBUS
 
+using namespace Qt::Literals::StringLiterals;
+
 MainWindow::MainWindow(QWidget *parent)
     : FramelessWindow(parent)
     , m_am(new ActionManager)
@@ -56,28 +58,24 @@ MainWindow::MainWindow(QWidget *parent)
 
     this->setAttribute(Qt::WA_TranslucentBackground, true);
     this->setMinimumSize(350, 330);
-    this->setWindowIcon(QIcon(":/icons/app-icon.svg"));
+    this->setWindowIcon(QIcon(u":/icons/app-icon.svg"_s));
     this->setMouseTracking(true);
     this->setAcceptDrops(true);
 
     m_pm->setAutoLoadFilterSuffixes(supportedImageFormats());
 
-    m_fadeOutAnimation = new QPropertyAnimation(this, "windowOpacity");
+    m_fadeOutAnimation = new QPropertyAnimation(this, "windowOpacity"_ba);
     m_fadeOutAnimation->setDuration(300);
     m_fadeOutAnimation->setStartValue(1);
     m_fadeOutAnimation->setEndValue(0);
-    m_floatUpAnimation = new QPropertyAnimation(this, "geometry");
+    m_floatUpAnimation = new QPropertyAnimation(this, "geometry"_ba);
     m_floatUpAnimation->setDuration(300);
     m_floatUpAnimation->setEasingCurve(QEasingCurve::OutCirc);
     m_exitAnimationGroup = new QParallelAnimationGroup(this);
     m_exitAnimationGroup->addAnimation(m_fadeOutAnimation);
     m_exitAnimationGroup->addAnimation(m_floatUpAnimation);
     connect(m_exitAnimationGroup, &QParallelAnimationGroup::finished,
-#ifdef Q_OS_MAC
-            this, &QWidget::hide);
-#else
-            this, &QWidget::close);
-#endif
+            this, &MainWindow::doCloseWindow);
 
     GraphicsScene * scene = new GraphicsScene(this);
 
@@ -92,7 +90,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_gv->fitInView(m_gv->sceneRect(), Qt::KeepAspectRatio);
 
     connect(m_graphicsView, &GraphicsView::navigatorViewRequired,
-            this, [ = ](bool required, const QTransform & tf){
+            this, [this](bool required, const QTransform & tf){
         m_gv->setTransform(GraphicsView::resetScale(tf));
         m_gv->fitInView(m_gv->sceneRect(), Qt::KeepAspectRatio);
         m_gv->setVisible(required);
@@ -141,10 +139,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_gv->setOpacity(0, false);
     m_closeButton->setOpacity(0, false);
 
-    connect(m_pm, &PlaylistManager::totalCountChanged, this, [this](int galleryFileCount) {
-        m_prevButton->setVisible(galleryFileCount > 1);
-        m_nextButton->setVisible(galleryFileCount > 1);
-    });
+    connect(m_pm, &PlaylistManager::totalCountChanged, this, &MainWindow::updateGalleryButtonsVisibility);
 
     connect(m_pm->model(), &PlaylistModel::modelReset, this, std::bind(&MainWindow::galleryCurrent, this, false, false));
     connect(m_pm, &PlaylistManager::currentIndexChanged, this, std::bind(&MainWindow::galleryCurrent, this, true, false));
@@ -180,7 +175,16 @@ MainWindow::~MainWindow()
 void MainWindow::showUrls(const QList<QUrl> &urls)
 {
     if (!urls.isEmpty()) {
-        m_graphicsView->showFileFromPath(urls.first().toLocalFile());
+        const QUrl & firstUrl = urls.first();
+        if (urls.count() == 1) {
+            const QString lowerCaseUrlPath(firstUrl.path().toLower());
+            if (lowerCaseUrlPath.endsWith(".m3u8") || lowerCaseUrlPath.endsWith(".m3u")) {
+                m_pm->loadM3U8Playlist(firstUrl);
+                galleryCurrent(true, true);
+                return;
+            }
+        }
+        m_graphicsView->showFileFromPath(firstUrl.toLocalFile());
         m_pm->loadPlaylist(urls);
     } else {
         m_graphicsView->showText(tr("File url list is empty"));
@@ -251,6 +255,9 @@ void MainWindow::clearGallery()
 
 void MainWindow::galleryPrev()
 {
+    const bool loopGallery = Settings::instance()->loopGallery();
+    if (!loopGallery && m_pm->isFirstIndex()) return;
+
     QModelIndex index = m_pm->previousIndex();
     if (index.isValid()) {
         m_pm->setCurrentIndex(index);
@@ -260,6 +267,9 @@ void MainWindow::galleryPrev()
 
 void MainWindow::galleryNext()
 {
+    const bool loopGallery = Settings::instance()->loopGallery();
+    if (!loopGallery && m_pm->isLastIndex()) return;
+
     QModelIndex index = m_pm->nextIndex();
     if (index.isValid()) {
         m_pm->setCurrentIndex(index);
@@ -280,6 +290,8 @@ void MainWindow::galleryCurrent(bool showLoadImageHintWhenEmpty, bool reloadImag
     } else if (showLoadImageHintWhenEmpty && m_pm->totalCount() <= 0) {
         m_graphicsView->showText(QCoreApplication::translate("GraphicsScene", "Drag image here"));
     }
+
+    updateGalleryButtonsVisibility();
 
     if (shouldResetfileWatcher) updateFileWatcher();
 }
@@ -304,7 +316,7 @@ void MainWindow::showEvent(QShowEvent *event)
     return FramelessWindow::showEvent(event);
 }
 
-void MainWindow::enterEvent(QT_ENTER_EVENT *event)
+void MainWindow::enterEvent(QEnterEvent *event)
 {
     m_bottomButtonGroup->setOpacity(1);
     m_gv->setOpacity(1);
@@ -345,11 +357,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
 {
     if (event->buttons() & Qt::LeftButton && m_clickedOnWindow && !isMaximized() && !isFullScreen()) {
         if (!window()->windowHandle()->startSystemMove()) {
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
             move(event->globalPosition().toPoint() - m_oldMousePos);
-#else
-            move(event->globalPos() - m_oldMousePos);
-#endif // QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         }
         event->accept();
     }
@@ -451,13 +459,11 @@ void MainWindow::contextMenuEvent(QContextMenuEvent *event)
     QMenu * menu = new QMenu;
     QMenu * copyMenu = new QMenu(tr("&Copy"));
     QUrl currentFileUrl = currentImageFileUrl();
-    QImage clipboardImage;
-    QUrl clipboardFileUrl;
 
     QAction * copyPixmap = m_am->actionCopyPixmap;
     QAction * copyFilePath = m_am->actionCopyFilePath;
 
-    copyMenu->setIcon(QIcon::fromTheme(QLatin1String("edit-copy")));
+    copyMenu->setIcon(QIcon::fromTheme(u"edit-copy"_s));
     copyMenu->addAction(copyPixmap);
     if (currentFileUrl.isValid()) {
         copyMenu->addAction(copyFilePath);
@@ -584,12 +590,16 @@ void MainWindow::centerWindow()
 
 void MainWindow::closeWindow()
 {
-    QRect windowRect(this->geometry());
-    m_floatUpAnimation->setStartValue(windowRect);
-    m_floatUpAnimation->setEndValue(windowRect.adjusted(0, -80, 0, 0));
-    m_floatUpAnimation->setStartValue(QRect(this->geometry().x(), this->geometry().y(), this->geometry().width(), this->geometry().height()));
-    m_floatUpAnimation->setEndValue(QRect(this->geometry().x(), this->geometry().y()-80, this->geometry().width(), this->geometry().height()));
-    m_exitAnimationGroup->start();
+    if (Settings::instance()->useBuiltInCloseAnimation()) {
+        QRect windowRect(this->geometry());
+        m_floatUpAnimation->setStartValue(windowRect);
+        m_floatUpAnimation->setEndValue(windowRect.adjusted(0, -80, 0, 0));
+        m_floatUpAnimation->setStartValue(QRect(this->geometry().x(), this->geometry().y(), this->geometry().width(), this->geometry().height()));
+        m_floatUpAnimation->setEndValue(QRect(this->geometry().x(), this->geometry().y()-80, this->geometry().width(), this->geometry().height()));
+        m_exitAnimationGroup->start();
+    } else {
+        doCloseWindow();
+    }
 }
 
 void MainWindow::updateWidgetsPosition()
@@ -607,8 +617,7 @@ void MainWindow::toggleProtectedMode()
 {
     m_protectedMode = !m_protectedMode;
     m_closeButton->setVisible(!m_protectedMode);
-    m_prevButton->setVisible(!m_protectedMode);
-    m_nextButton->setVisible(!m_protectedMode);
+    updateGalleryButtonsVisibility();
 }
 
 void MainWindow::toggleStayOnTop()
@@ -784,7 +793,7 @@ void MainWindow::on_actionTrash_triggered()
     if (result == QMessageBox::Yes) {
         bool succ = file.moveToTrash();
         if (!succ) {
-            QMessageBox::warning(this, "Failed to move file to trash",
+            QMessageBox::warning(this, tr("Failed to move file to trash"),
                                  tr("Move to trash failed, it might caused by file permission issue, file system limitation, or platform limitation."));
         } else {
             m_pm->removeAt(index);
@@ -895,9 +904,9 @@ void MainWindow::on_actionLocateInFileManager_triggered()
         QDesktopServices::openUrl(folderUrl);
         return;
     }
-    QDBusInterface fm1Iface(QStringLiteral("org.freedesktop.FileManager1"),
-                            QStringLiteral("/org/freedesktop/FileManager1"),
-                            QStringLiteral("org.freedesktop.FileManager1"));
+    QDBusInterface fm1Iface(u"org.freedesktop.FileManager1"_s,
+                            u"/org/freedesktop/FileManager1"_s,
+                            u"org.freedesktop.FileManager1"_s);
     fm1Iface.setTimeout(1000);
     fm1Iface.callWithArgumentList(QDBus::Block, "ShowItems", {
                                       QStringList{currentFileUrl.toString()},
@@ -916,9 +925,28 @@ void MainWindow::on_actionQuitApp_triggered()
     quitAppAction(false);
 }
 
+void MainWindow::doCloseWindow()
+{
+#ifdef Q_OS_MAC
+    this->hide();
+#else
+    this->close();
+#endif
+}
+
 bool MainWindow::updateFileWatcher(const QString &basePath)
 {
     m_fileSystemWatcher->removePaths(m_fileSystemWatcher->files());
     if (!basePath.isEmpty()) return m_fileSystemWatcher->addPath(basePath);
     return false;
+}
+
+void MainWindow::updateGalleryButtonsVisibility()
+{
+    const int galleryFileCount = m_pm->totalCount();
+    const bool loopGallery = Settings::instance()->loopGallery();
+    m_prevButton->setVisible(!m_protectedMode && galleryFileCount > 1);
+    m_nextButton->setVisible(!m_protectedMode && galleryFileCount > 1);
+    m_prevButton->setEnabled(loopGallery || !m_pm->isFirstIndex());
+    m_nextButton->setEnabled(loopGallery || !m_pm->isLastIndex());
 }
