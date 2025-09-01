@@ -1,11 +1,172 @@
-pineapple-pictures (1.1.0-1deepin1) unstable; urgency=medium
+pineapple-pictures (1.1.1-1) unstable; urgency=medium
 
-  * New upstream release.
+  * New upstream version 1.1.1
 
- -- Gary Wang <opensource@blumia.net>  Fri, 11 Jul 2025 19:30:00 +0800
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Fri, 29 Aug 2025 23:17:57 +0100
 
-pineapple-pictures (1.0.0-1deepin1) unstable; urgency=medium
+pineapple-pictures (0.9.2-1) unstable; urgency=medium
 
-  * New upstream release.
+  * New upstream version 0.9.2
+    - Update copyright.
+  * Update Standards-Version to 4.7.2
 
- -- lhdjply <lhdjply@126.com>  Tue, 29 Apr 2025 13:57:38 +0800
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Sun, 06 Apr 2025 16:31:24 +0100
+
+pineapple-pictures (0.9.1-1) unstable; urgency=medium
+
+  * New upstream version 0.9.1
+    - Update copyright.
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Wed, 19 Feb 2025 21:11:03 +0000
+
+pineapple-pictures (0.9.0-1) unstable; urgency=medium
+
+  * New upstream version 0.9.0
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Fri, 27 Dec 2024 14:33:57 +0000
+
+pineapple-pictures (0.8.2.1-1) unstable; urgency=medium
+
+  * New upstream version 0.8.2.1
+  * Update Standards-Version to 4.7.0
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Sun, 03 Nov 2024 22:08:54 +0000
+
+pineapple-pictures (0.8.1-1) unstable; urgency=medium
+
+  * New upstream version 0.8.1
+  * Update copyright.
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Tue, 15 Oct 2024 21:21:51 +0100
+
+pineapple-pictures (0.8.0-1) unstable; urgency=medium
+
+  * New upstream version 0.8.0
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Sat, 27 Jul 2024 10:46:29 +0100
+
+pineapple-pictures (0.7.4-1) unstable; urgency=medium
+
+  * New upstream version 0.7.4
+    - Update copyright.
+    - Update to qt6.
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Sat, 25 May 2024 10:15:59 +0100
+
+pineapple-pictures (0.7.3-1) unstable; urgency=medium
+
+  * New upstream version 0.7.3
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Sun, 21 Jan 2024 22:26:26 +0000
+
+pineapple-pictures (0.7.0-1) unstable; urgency=medium
+
+  * New upstream version 0.7.0
+    - Update copyright.
+  * Update Standards-Version to 4.6.2
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Fri, 16 Jun 2023 22:13:01 +0100
+
+pineapple-pictures (0.6.5-1) unstable; urgency=medium
+
+  * New upstream version 0.6.5
+    - Update copyright.
+  * Update Standards-Version to 4.6.1.0
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Mon, 02 Jan 2023 14:09:40 +0000
+
+pineapple-pictures (0.6.1-1) unstable; urgency=medium
+
+  * New upstream version 0.6.1
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Fri, 03 Jun 2022 11:35:03 +0100
+
+pineapple-pictures (0.5.4-1) unstable; urgency=medium
+
+  * New upstream version 0.5.4
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Sun, 20 Mar 2022 00:25:49 +0000
+
+pineapple-pictures (0.5.3-1) unstable; urgency=medium
+
+  * New upstream version 0.5.3
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Thu, 23 Dec 2021 18:20:48 +0000
+
+pineapple-pictures (0.5.2-1) unstable; urgency=medium
+
+  [ Debian Janitor ]
+  * Set upstream metadata fields: Bug-Database, Bug-Submit,
+    Repository, Repository-Browse.
+
+  [ Sudip Mukherjee ]
+  * New upstream version 0.5.2
+  * Update Standards-Version to 4.6.0.1
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Sun, 14 Nov 2021 22:15:59 +0000
+
+pineapple-pictures (0.5.1-1) unstable; urgency=medium
+
+  * Upload to unstable.
+  * New upstream version 0.5.1
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Sat, 21 Aug 2021 20:03:42 +0100
+
+pineapple-pictures (0.5.0-1) experimental; urgency=medium
+
+  * New upstream version 0.5.0
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Sun, 01 Aug 2021 00:04:34 +0100
+
+pineapple-pictures (0.4.4-1) experimental; urgency=medium
+
+  * New upstream version 0.4.4
+    - Update copyright.
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Sat, 26 Jun 2021 23:07:40 +0100
+
+pineapple-pictures (0.4.2-1) experimental; urgency=medium
+
+  * New upstream version 0.4.2
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Fri, 02 Apr 2021 21:57:34 +0100
+
+pineapple-pictures (0.4.1-1) unstable; urgency=medium
+
+  * New upstream version 0.4.1
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Sat, 06 Feb 2021 19:27:06 +0000
+
+pineapple-pictures (0.4.0-2) unstable; urgency=medium
+
+  * Enable metadata viewing with libexiv2.
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Fri, 01 Jan 2021 16:46:14 +0000
+
+pineapple-pictures (0.4.0-1) unstable; urgency=medium
+
+  * New upstream version 0.4.0
+    - Update copyright.
+  * Update Standards-Version to 4.5.1
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Sat, 26 Dec 2020 20:02:28 +0000
+
+pineapple-pictures (0.3.4-1) unstable; urgency=medium
+
+  * New upstream version 0.3.4
+    - Remove patches applied upstream.
+  * Add autopkgtest.
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Sat, 14 Nov 2020 23:33:17 +0000
+
+pineapple-pictures (0.3.3-2) unstable; urgency=medium
+
+  * Source only upload.
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Wed, 28 Oct 2020 11:18:25 +0000
+
+pineapple-pictures (0.3.3-1) unstable; urgency=medium
+
+  * Initial release (Closes: #972376)
+
+ -- Sudip Mukherjee <sudipm.mukherjee@gmail.com>  Sat, 24 Oct 2020 19:16:30 +0100

@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -efu
+
+/usr/bin/ppic &
+pid=$!
+xdotool search --sync --onlyvisible --pid $pid
+kill -9 $pid
