@@ -55,9 +55,11 @@ void ActionManager::setupAction(MainWindow *mainWindow)
     CREATE_NEW_ACTION(mainWindow, actionAnimationNextFrame);
 
     CREATE_NEW_THEMEICON_ACTION(mainWindow, actionOpen, document-open);
+    CREATE_NEW_THEMEICON_ACTION(mainWindow, actionSaveAs, document-save-as);
     CREATE_NEW_ACTION(mainWindow, actionHorizontalFlip);
     CREATE_NEW_ACTION(mainWindow, actionFitInView);
     CREATE_NEW_ACTION(mainWindow, actionFitByWidth);
+    CREATE_NEW_ACTION(mainWindow, actionFitLongImage);
     CREATE_NEW_THEMEICON_ACTION(mainWindow, actionCopyPixmap, edit-copy);
     CREATE_NEW_ACTION(mainWindow, actionCopyFilePath);
     CREATE_NEW_THEMEICON_ACTION(mainWindow, actionPaste, edit-paste);
@@ -83,6 +85,7 @@ void ActionManager::retranslateUi(MainWindow *mainWindow)
     Q_UNUSED(mainWindow);
 
     actionOpen->setText(QCoreApplication::translate("MainWindow", "&Open...", nullptr));
+    actionSaveAs->setText(QCoreApplication::translate("MainWindow", "Save &As...", nullptr));
 
     actionActualSize->setText(QCoreApplication::translate("MainWindow", "Actual size", nullptr));
     actionToggleMaximize->setText(QCoreApplication::translate("MainWindow", "Toggle maximize", nullptr));
@@ -101,6 +104,7 @@ void ActionManager::retranslateUi(MainWindow *mainWindow)
     actionHorizontalFlip->setText(QCoreApplication::translate("MainWindow", "Flip &Horizontally", nullptr));
     actionFitInView->setText(QCoreApplication::translate("MainWindow", "Fit to view", nullptr));
     actionFitByWidth->setText(QCoreApplication::translate("MainWindow", "Fit to width", nullptr));
+    actionFitLongImage->setText(QCoreApplication::translate("MainWindow", "Fit long image", nullptr));
     actionCopyPixmap->setText(QCoreApplication::translate("MainWindow", "Copy P&ixmap", nullptr));
     actionCopyFilePath->setText(QCoreApplication::translate("MainWindow", "Copy &File Path", nullptr));
     actionPaste->setText(QCoreApplication::translate("MainWindow", "&Paste", nullptr));
@@ -127,6 +131,7 @@ void ActionManager::retranslateUi(MainWindow *mainWindow)
 void ActionManager::setupShortcuts()
 {
     actionOpen->setShortcut(QKeySequence::Open);
+    actionSaveAs->setShortcut(QKeySequence::SaveAs);
     actionActualSize->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_0));
     actionZoomIn->setShortcut(QKeySequence::ZoomIn);
     actionZoomOut->setShortcut(QKeySequence::ZoomOut);

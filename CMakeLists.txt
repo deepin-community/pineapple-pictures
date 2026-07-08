@@ -4,7 +4,7 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-project(pineapple-pictures VERSION 1.1.1) # don't forget to update NEWS file and AppStream metadata.
+project(pineapple-pictures VERSION 1.5.0) # don't forget to update NEWS file and AppStream metadata.
 
 include(GNUInstallDirs)
 include(FeatureSummary)
@@ -44,6 +44,7 @@ set (PPIC_CPP_FILES
     app/graphicsview.cpp
     app/graphicsscene.cpp
     app/bottombuttongroup.cpp
+    app/titlebar.cpp
     app/navigatorview.cpp
     app/opacityhelper.cpp
     app/toolbutton.cpp
@@ -65,6 +66,7 @@ set (PPIC_HEADER_FILES
     app/graphicsview.h
     app/graphicsscene.h
     app/bottombuttongroup.h
+    app/titlebar.h
     app/navigatorview.h
     app/opacityhelper.h
     app/toolbutton.h
@@ -94,7 +96,8 @@ file (GLOB PPIC_TS_FILES app/translations/*.ts)
 set (PPIC_CPP_FILES_FOR_I18N ${PPIC_CPP_FILES})
 
 if (WIN32)
-    list(APPEND PPIC_RC_FILES assets/pineapple-pictures.rc)
+    configure_file(assets/pineapple-pictures.rc.in pineapple-pictures.rc @ONLY)
+    list(APPEND PPIC_RC_FILES ${CMAKE_CURRENT_BINARY_DIR}/pineapple-pictures.rc)
 endif ()
 
 add_executable (${EXE_NAME}
@@ -269,6 +272,25 @@ if (DEFINED QM_FILE_INSTALL_DIR)
     )
 endif()
 
+if (WIN32)
+    install(
+        FILES dist/passoc/ppic.pacfg
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+        RENAME default-assoc.pacfg
+    )
+
+    install(
+        FILES
+            dist/passoc/generic.ico
+            dist/passoc/jpeg.ico
+            dist/passoc/gif.ico
+            dist/passoc/svg.ico
+            dist/passoc/png.ico
+            dist/passoc/psd.ico
+        DESTINATION "${CMAKE_INSTALL_BINDIR}/icons"
+    )
+endif()
+
 feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
 
 # CPACK: General Settings
@@ -284,7 +306,7 @@ elseif (APPLE)
 elseif (UNIX)
     set (CPACK_SYSTEM_NAME "${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
     set (CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
-    set (CPACK_DEBIAN_PACKAGE_RECOMMENDS "kimageformat-plugins")
+    set (CPACK_DEBIAN_PACKAGE_RECOMMENDS "kimageformat6-plugins")
 endif()
 
 include(CPack)

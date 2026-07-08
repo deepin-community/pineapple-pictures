@@ -7,6 +7,7 @@
 #include "settings.h"
 #include "toolbutton.h"
 #include "bottombuttongroup.h"
+#include "titlebar.h"
 #include "graphicsview.h"
 #include "navigatorview.h"
 #include "graphicsscene.h"
@@ -38,6 +39,7 @@
 #include <QProcess>
 #include <QDesktopServices>
 #include <QMessageBox>
+#include <QImageWriter>
 
 #ifdef HAVE_QTDBUS
 #include <QDBusInterface>
@@ -100,20 +102,20 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_graphicsView, &GraphicsView::viewportRectChanged,
             m_gv, &NavigatorView::updateMainViewportRegion);
 
-    m_closeButton = new ToolButton(true, m_graphicsView);
-    m_closeButton->setIconSize(QSize(32, 32));
-    m_closeButton->setFixedSize(QSize(50, 50));
-    m_closeButton->setIconResourcePath(":/icons/window-close.svg");
+    m_titleBar = new TitleBar(this);
+    m_titleBar->setCloseButtonOnly(!Settings::instance()->showTitleBar());
 
-    connect(m_closeButton, &QAbstractButton::clicked,
+    connect(m_titleBar, &TitleBar::closeRequested,
             this, &MainWindow::closeWindow);
+    connect(m_titleBar, &TitleBar::maximizeToggleRequested,
+            this, &MainWindow::toggleMaximize);
 
-    m_prevButton = new ToolButton(false, m_graphicsView);
+    m_prevButton = new ToolButton(m_graphicsView);
     m_prevButton->setIconSize(QSize(75, 75));
     m_prevButton->setIconResourcePath(":/icons/go-previous.svg");
     m_prevButton->setVisible(false);
     m_prevButton->setOpacity(0, false);
-    m_nextButton = new ToolButton(false, m_graphicsView);
+    m_nextButton = new ToolButton(m_graphicsView);
     m_nextButton->setIconSize(QSize(75, 75));
     m_nextButton->setIconResourcePath(":/icons/go-next.svg");
     m_nextButton->setVisible(false);
@@ -137,7 +139,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     m_bottomButtonGroup->setOpacity(0, false);
     m_gv->setOpacity(0, false);
-    m_closeButton->setOpacity(0, false);
+    m_titleBar->setOpacity(0, false);
 
     connect(m_pm, &PlaylistManager::totalCountChanged, this, &MainWindow::updateGalleryButtonsVisibility);
 
@@ -160,7 +162,7 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     // allow some mouse events can go through these widgets for resizing window.
-    installResizeCapture(m_closeButton);
+    installResizeCapture(m_titleBar);
     installResizeCapture(m_graphicsView);
     installResizeCapture(m_graphicsView->viewport());
     installResizeCapture(m_gv);
@@ -222,7 +224,7 @@ void MainWindow::adjustWindowSizeBySceneRect()
 
     if (m_graphicsView->scaleFactor() < 1 || size().expandedTo(sceneSizeWithMargins) != size()) {
         // if it scaled down by the resize policy:
-        QSize screenSize = window()->screen()->availableSize();
+        QSize screenSize = qApp->screenAt(QCursor::pos())->availableSize();
         if (screenSize.expandedTo(sceneSize) == screenSize) {
             // we can show the picture by increase the window size.
             QSize finalSize = (screenSize.expandedTo(sceneSizeWithMargins) == screenSize) ?
@@ -290,6 +292,7 @@ void MainWindow::galleryCurrent(bool showLoadImageHintWhenEmpty, bool reloadImag
         setWindowTitle(m_pm->urlByIndex(index).fileName());
     } else if (showLoadImageHintWhenEmpty && m_pm->totalCount() <= 0) {
         m_graphicsView->showText(QCoreApplication::translate("GraphicsScene", "Drag image here"));
+        setWindowTitle(QString());
     }
 
     updateGalleryButtonsVisibility();
@@ -322,7 +325,7 @@ void MainWindow::enterEvent(QEnterEvent *event)
     m_bottomButtonGroup->setOpacity(1);
     m_gv->setOpacity(1);
 
-    m_closeButton->setOpacity(1);
+    m_titleBar->setOpacity(1);
     m_prevButton->setOpacity(1);
     m_nextButton->setOpacity(1);
 
@@ -334,7 +337,7 @@ void MainWindow::leaveEvent(QEvent *event)
     m_bottomButtonGroup->setOpacity(0);
     m_gv->setOpacity(0);
 
-    m_closeButton->setOpacity(0);
+    m_titleBar->setOpacity(0);
     m_prevButton->setOpacity(0);
     m_nextButton->setOpacity(0);
 
@@ -504,6 +507,12 @@ void MainWindow::contextMenuEvent(QContextMenuEvent *event)
         menu->addAction(paste);
     }
 
+#if 0
+    if (currentFileUrl.isValid()) {
+        menu->addAction(m_am->actionSaveAs);
+    }
+#endif // 0
+
     menu->addSeparator();
 
     menu->addAction(m_am->actionHorizontalFlip);
@@ -584,7 +593,7 @@ void MainWindow::centerWindow()
             Qt::LeftToRight,
             Qt::AlignCenter,
             this->size(),
-            window()->screen()->availableGeometry()
+            qApp->screenAt(QCursor::pos())->availableGeometry()
         )
     );
 }
@@ -605,7 +614,12 @@ void MainWindow::closeWindow()
 
 void MainWindow::updateWidgetsPosition()
 {
-    m_closeButton->move(width() - m_closeButton->width(), 0);
+    if (m_titleBar->closeButtonOnly()) {
+        const int bw = m_titleBar->closeButtonWidth();
+        m_titleBar->setGeometry(width() - bw, 0, bw, m_titleBar->height());
+    } else {
+        m_titleBar->setGeometry(0, 0, width(), m_titleBar->height());
+    }
     m_prevButton->move(25, (height() - m_prevButton->sizeHint().height()) / 2);
     m_nextButton->move(width() - m_nextButton->sizeHint().width() - 25,
                        (height() - m_prevButton->sizeHint().height()) / 2);
@@ -617,7 +631,7 @@ void MainWindow::updateWidgetsPosition()
 void MainWindow::toggleProtectedMode()
 {
     m_protectedMode = !m_protectedMode;
-    m_closeButton->setVisible(!m_protectedMode);
+    m_titleBar->setCloseButtonVisible(!m_protectedMode);
     updateGalleryButtonsVisibility();
 }
 
@@ -696,10 +710,75 @@ void MainWindow::on_actionOpen_triggered()
     }
 }
 
+void MainWindow::on_actionSaveAs_triggered()
+{
+    QUrl currentFileUrl = currentImageFileUrl();
+    if (!currentFileUrl.isValid()) {
+        QMessageBox::warning(this, tr("Save As"), tr("No image is currently open."));
+        return;
+    }
+
+    QStringList supportedFormats;
+    QStringList nameFilters;
+
+    const QList<QByteArray> imageFormats = QImageWriter::supportedImageFormats();
+    for (const QByteArray &format : imageFormats) {
+        QString formatStr = QString::fromLatin1(format).toLower();
+        if (!formatStr.isEmpty()) {
+            supportedFormats << formatStr;
+            nameFilters << tr("%1 Image (*.%2)").arg(formatStr.toUpper(), formatStr);
+        }
+    }
+
+    if (imageFormats.isEmpty()) {
+        QMessageBox::warning(this, tr("Save As"),
+                            tr("No supported image formats are available."));
+        return;
+    }
+
+    QString selectedFilter;
+    QString saveFilePath = QFileDialog::getSaveFileName(this,
+        tr("Save As"),
+        QStandardPaths::writableLocation(QStandardPaths::PicturesLocation),
+        nameFilters.join(";;"),
+        &selectedFilter);
+
+    if (saveFilePath.isEmpty()) {
+        return; // User cancelled
+    }
+
+    // Ensure the file has the correct extension
+    QString expectedExtension;
+
+    const int filterIndex = nameFilters.indexOf(selectedFilter);
+    if (filterIndex != -1) {
+        expectedExtension = supportedFormats.at(filterIndex);
+    }
+
+    if (!expectedExtension.isEmpty() && !saveFilePath.endsWith('.' + expectedExtension, Qt::CaseInsensitive)) {
+        saveFilePath += '.' + expectedExtension;
+    }
+
+    // Save the image
+    QImageReader imageReader(currentFileUrl.toLocalFile());
+    imageReader.setAutoTransform(true);
+    imageReader.setDecideFormatFromContent(true);
+    imageReader.setAllocationLimit(0);
+    QImage img(imageReader.read());
+    QImageWriter writer(saveFilePath);
+    writer.setFormat(expectedExtension.toLatin1());
+    if (!writer.write(img)) {
+        QMessageBox::warning(this, tr("Save As"),
+                            tr("Failed to save image: %1").arg(writer.errorString()));
+        return;
+    }
+}
+
 void MainWindow::on_actionActualSize_triggered()
 {
     m_graphicsView->resetScale();
     m_graphicsView->setEnableAutoFitInView(false);
+    m_graphicsView->setLongImageMode(false);
 }
 
 void MainWindow::on_actionToggleMaximize_triggered()
@@ -728,11 +807,18 @@ void MainWindow::on_actionFitInView_triggered()
 {
     m_graphicsView->fitInView(m_gv->sceneRect(), Qt::KeepAspectRatio);
     m_graphicsView->setEnableAutoFitInView(m_graphicsView->scaleFactor() <= 1);
+    m_graphicsView->setLongImageMode(false);
 }
 
 void MainWindow::on_actionFitByWidth_triggered()
 {
     m_graphicsView->fitByOrientation();
+}
+
+void MainWindow::on_actionFitLongImage_triggered()
+{
+    m_graphicsView->setLongImageMode(true);
+    m_graphicsView->fitLongImage();
 }
 
 void MainWindow::on_actionCopyPixmap_triggered()
@@ -813,14 +899,12 @@ void MainWindow::on_actionRotateClockwise_triggered()
 {
     m_graphicsView->rotateView();
     m_graphicsView->displayScene();
-    m_gv->setVisible(false);
 }
 
 void MainWindow::on_actionRotateCounterClockwise_triggered()
 {
     m_graphicsView->rotateView(false);
     m_graphicsView->displayScene();
-    m_gv->setVisible(false);
 }
 
 void MainWindow::on_actionPrevPicture_triggered()

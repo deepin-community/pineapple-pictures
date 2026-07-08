@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 Gary Wang <wzc782970009@gmail.com>
+// SPDX-FileCopyrightText: 2025 Gary Wang <git@blumia.net>
 //
 // SPDX-License-Identifier: MIT
 
@@ -8,6 +8,7 @@
 #include "settings.h"
 
 #include <QDebug>
+#include <QColorSpace>
 #include <QMouseEvent>
 #include <QScrollBar>
 #include <QMimeData>
@@ -53,6 +54,18 @@ void GraphicsView::showFileFromPath(const QString &filePath)
         } else if (!imageReader.canRead()) {
             showText(tr("Image data is invalid or currently unsupported"));
         } else {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+            QImage && img = imageReader.read();
+            if (img.isNull()) {
+                showText(tr("Image data is invalid or currently unsupported"));
+            } else {
+                if (img.format() == QImage::Format_CMYK8888) {
+                    img.convertToColorSpace(QColorSpace::SRgb);
+                }
+                img.setDevicePixelRatio(devicePixelRatioF());
+                showImage(img);
+            }
+#else
             QPixmap && pixmap = QPixmap::fromImageReader(&imageReader);
             if (pixmap.isNull()) {
                 showText(tr("Image data is invalid or currently unsupported"));
@@ -60,6 +73,7 @@ void GraphicsView::showFileFromPath(const QString &filePath)
                 pixmap.setDevicePixelRatio(devicePixelRatioF());
                 showImage(pixmap);
             }
+#endif // QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
         }
     }
 }
@@ -124,6 +138,7 @@ void GraphicsView::resetTransform()
 void GraphicsView::zoomView(qreal scaleFactor)
 {
     m_enableFitInView = false;
+    m_longImageMode = false;
     scale(scaleFactor, scaleFactor);
     applyTransformationModeByScaleFactor();
     emit navigatorViewRequired(!isThingSmallerThanWindowWith(transform()), transform());
@@ -140,6 +155,10 @@ void GraphicsView::rotateView(bool clockwise)
                   0,                  0,                  1);
     tf = transform() * tf;
     setTransform(tf);
+    
+    // Apply transformation mode but don't emit navigator signal here
+    // Let displayScene() handle the navigator visibility correctly
+    applyTransformationModeByScaleFactor();
 }
 
 void GraphicsView::flipView(bool horizontal)
@@ -261,6 +280,31 @@ void GraphicsView::fitByOrientation(Qt::Orientation ori, bool scaleDownOnly)
     emit navigatorViewRequired(!isThingSmallerThanWindowWith(transform()), transform());
 }
 
+bool GraphicsView::isLongImage() const
+{
+    // Get the transformed image size (considering rotation and other transforms)
+    QRectF transformedRect = transform().mapRect(sceneRect());
+    QSizeF imageSize = transformedRect.size();
+    
+    if (imageSize.isEmpty()) return false;
+    
+    qreal aspectRatio = imageSize.width() / imageSize.height();
+    
+    // Check if aspect ratio exceeds 5:2 (wide) or 2:5 (tall)
+    return aspectRatio > 2.5 || aspectRatio < 0.4;
+}
+
+void GraphicsView::fitLongImage()
+{
+    QRectF transformedRect = transform().mapRect(sceneRect());
+
+    if (transformedRect.width() < transformedRect.height()) {
+        fitByOrientation(Qt::Horizontal, true);
+    } else {
+        fitByOrientation(Qt::Vertical, true);
+    }
+}
+
 void GraphicsView::displayScene()
 {
     if (shouldAvoidTransform()) {
@@ -268,10 +312,25 @@ void GraphicsView::displayScene()
         return;
     }
 
-    if (isSceneBiggerThanView()) {
-        fitInView(sceneRect(), Qt::KeepAspectRatio);
+    // Check if should apply long image mode
+    if (Settings::instance()->autoLongImageMode() && isLongImage()) {
+        m_longImageMode = true;
+        m_firstUserMediaLoaded = true;
+        if (isSceneBiggerThanView()) fitLongImage();
+        return;
     }
 
+    if (isSceneBiggerThanView()) {
+        // Do fit-in-view
+        fitInView(sceneRect(), Qt::KeepAspectRatio);
+        // After fitInView, the image should fit the window, so hide navigator
+        emit navigatorViewRequired(false, transform());
+    } else {
+        // Image is already smaller than window, no navigator needed
+        emit navigatorViewRequired(false, transform());
+    }
+
+    m_longImageMode = false;
     m_enableFitInView = true;
     m_firstUserMediaLoaded = true;
 }
@@ -289,6 +348,11 @@ bool GraphicsView::isSceneBiggerThanView() const
 void GraphicsView::setEnableAutoFitInView(bool enable)
 {
     m_enableFitInView = enable;
+}
+
+void GraphicsView::setLongImageMode(bool enable)
+{
+    m_longImageMode = enable;
 }
 
 bool GraphicsView::avoidResetTransform() const
@@ -363,7 +427,12 @@ void GraphicsView::wheelEvent(QWheelEvent *event)
 
 void GraphicsView::resizeEvent(QResizeEvent *event)
 {
-    if (m_enableFitInView) {
+    if (m_longImageMode) {
+        // In long image mode, reapply long image logic on resize
+        // We directly apply the long image mode logic without rechecking
+        // if we should enter long image mode, as the mode is already active
+        fitLongImage();
+    } else if (m_enableFitInView) {
         bool originalSizeSmallerThanWindow = isThingSmallerThanWindowWith(resetScale(transform()));
         if (originalSizeSmallerThanWindow && scaleFactor() >= 1) {
             // no longer need to do fitInView()

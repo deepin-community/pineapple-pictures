@@ -5,9 +5,9 @@ Source: https://github.com/BLumia/pineapple-pictures
 
 Files:     *
 Copyright: 2020, Gary Wang
-           2020-2025, BLumia
+           2020-2026, BLumia
            2022, Gary Wang <wzc782970009@gmail.com>
-           2022-2025, Gary Wang <git@blumia.net>
+           2022-2026, Gary Wang <git@blumia.net>
 License:   MIT
 
 Files:     dist/appstream/net.blumia.pineapple-pictures.metainfo.xml
@@ -15,7 +15,7 @@ Copyright: 2020, BLumia
 License:   CC0-1.0
 
 Files:     debian/*
-Copyright: 2020-2025, Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Copyright: 2020-2026, Sudip Mukherjee <sudipm.mukherjee@gmail.com>
 License:   MIT
 
 License:   MIT

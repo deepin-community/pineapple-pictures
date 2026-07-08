@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
 Build-Depends: debhelper-compat (= 13), cmake, qt6-base-dev,
  qt6-svg-dev, qt6-tools-dev, libexiv2-dev
-Standards-Version: 4.7.2
+Standards-Version: 4.7.4
 Homepage: https://github.com/BLumia/pineapple-pictures
 Vcs-Browser: https://salsa.debian.org/sudip/pineapple-pictures
 Vcs-Git: https://salsa.debian.org/sudip/pineapple-pictures.git
@@ -12,7 +12,7 @@ Vcs-Git: https://salsa.debian.org/sudip/pineapple-pictures.git
 Package: pineapple-pictures
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: Lightweight Qt5 image viewer
+Description: Lightweight Qt-based image viewer
  An uncluttered and fast image viewer which is very simple and easy to
  use. There is also an option to make the window stay on top so users
  can also pin the window with their image as a reference image window

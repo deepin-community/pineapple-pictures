@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 Gary Wang <wzc782970009@gmail.com>
+// SPDX-FileCopyrightText: 2025 Gary Wang <git@blumia.net>
 //
 // SPDX-License-Identifier: MIT
 
@@ -61,7 +61,7 @@ AboutDialog::AboutDialog(QWidget *parent)
         )),
         u"<hr/>"_s,
         tr("Copyright (c) %1 %2", "%1 is year, %2 is the name of copyright holder(s)")
-            .arg(u"2025"_s, u"<a href='https://github.com/BLumia'>@BLumia</a>"_s),
+            .arg(u"2026"_s, u"<a href='https://github.com/BLumia'>@BLumia</a>"_s),
         u"<br/>"_s,
         tr("Logo designed by %1").arg(u"<a href='https://github.com/Lovelyblack'>@Lovelyblack</a>"_s),
         u"<hr/>"_s,
@@ -105,7 +105,7 @@ AboutDialog::AboutDialog(QWidget *parent)
 
     const QString mitLicense(QStringLiteral(R"(Expat/MIT License
 
-Copyright (c) 2025 BLumia
+Copyright &copy; 2026 BLumia
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

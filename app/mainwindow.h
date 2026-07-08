@@ -20,6 +20,7 @@ QT_END_NAMESPACE
 class ActionManager;
 class PlaylistManager;
 class ToolButton;
+class TitleBar;
 class GraphicsView;
 class NavigatorView;
 class BottomButtonGroup;
@@ -75,6 +76,7 @@ protected:
 
 private slots:
     void on_actionOpen_triggered();
+    void on_actionSaveAs_triggered();
 
     void on_actionActualSize_triggered();
     void on_actionToggleMaximize_triggered();
@@ -93,6 +95,7 @@ private slots:
     void on_actionHorizontalFlip_triggered();
     void on_actionFitInView_triggered();
     void on_actionFitByWidth_triggered();
+    void on_actionFitLongImage_triggered();
     void on_actionCopyPixmap_triggered();
     void on_actionCopyFilePath_triggered();
     void on_actionPaste_triggered();
@@ -121,9 +124,9 @@ private:
     QPropertyAnimation *m_floatUpAnimation;
     QParallelAnimationGroup *m_exitAnimationGroup;
     QFileSystemWatcher *m_fileSystemWatcher;
-    ToolButton *m_closeButton;
     ToolButton *m_prevButton;
     ToolButton *m_nextButton;
+    TitleBar *m_titleBar;
     GraphicsView *m_graphicsView;
     NavigatorView *m_gv;
     BottomButtonGroup *m_bottomButtonGroup;
