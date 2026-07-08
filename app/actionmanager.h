@@ -23,6 +23,7 @@ public:
 
 public:
     QAction *actionOpen;
+    QAction *actionSaveAs;
 
     QAction *actionActualSize;
     QAction *actionToggleMaximize;
@@ -41,6 +42,7 @@ public:
     QAction *actionHorizontalFlip;
     QAction *actionFitInView;
     QAction *actionFitByWidth;
+    QAction *actionFitLongImage;
     QAction *actionCopyPixmap;
     QAction *actionCopyFilePath;
     QAction *actionPaste;

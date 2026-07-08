@@ -32,6 +32,7 @@ SOURCES += \
     app/mainwindow.cpp \
     app/graphicsview.cpp \
     app/bottombuttongroup.cpp \
+    app/titlebar.cpp \
     app/graphicsscene.cpp \
     app/navigatorview.cpp \
     app/opacityhelper.cpp \
@@ -52,6 +53,7 @@ HEADERS += \
     app/mainwindow.h \
     app/graphicsview.h \
     app/bottombuttongroup.h \
+    app/titlebar.h \
     app/graphicsscene.h \
     app/navigatorview.h \
     app/opacityhelper.h \
@@ -87,7 +89,7 @@ RESOURCES += \
     assets/resources.qrc
 
 # Generate from svg:
-# magick convert -density 512x512 -background none app-icon.svg -define icon:auto-resize app-icon.ico
+# magick -density 512x512 -background none app-icon.svg -define icon:auto-resize app-icon.ico
 RC_ICONS = assets/icons/app-icon.ico
 
 # Windows only, for rc file (we're not going to use the .rc file in this repo)
